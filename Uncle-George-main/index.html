@@ -1,0 +1,316 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CvSU Calculator | DCIT 26</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; scroll-behavior: smooth; }
+    body { margin: 0; font-family: Arial, sans-serif; }
+    button { transition: .15s; }
+    button:active { transform: scale(.95); }
+    .number { background: #214b3d; color: white; }
+    .number:hover { background: #316652; }
+    .operator { background: #087f50; color: white; }
+    .operator:hover { background: #059669; }
+    .utility { background: #d1fae5; color: #065f46; }
+    .utility:hover { background: #a7f3d0; }
+    .equals { background: #34d399; color: #064e3b; }
+    .equals:hover { background: #6ee7b7; }
+  </style>
+</head>
+<body class="bg-white text-slate-900">
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+function calculate(input) {
+  const tokens = input.match(/\d*\.?\d+|[+\-*/]/g);
+  if (!tokens || tokens.join("") !== input.replace(/\s/g, ""))
+    throw Error("Invalid expression");
+
+  let values = [], ops = [], expecting = true;
+  const priority = op => ["+", "-"].includes(op) ? 1 : 2;
+
+  function apply() {
+    const op = ops.pop(), b = values.pop(), a = values.pop();
+    if (a === undefined || b === undefined) throw Error("Invalid expression");
+    let r;
+    if (op === "+") r = a + b;
+    if (op === "-") r = a - b;
+    if (op === "*") r = a * b;
+    if (op === "/") {
+      if (b === 0) throw Error("Cannot divide by zero");
+      r = a / b;
+    }
+    if (!Number.isFinite(r)) throw Error("Result out of range");
+    values.push(r);
+  }
+
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    if (expecting) {
+      if (t === "+" || t === "-") {
+        const next = tokens[++i];
+        if (!next || !/^\d*\.?\d+$/.test(next)) throw Error("Invalid expression");
+        values.push(Number(t + next));
+      } else if (/^\d*\.?\d+$/.test(t)) {
+        values.push(Number(t));
+      } else throw Error("Invalid expression");
+      expecting = false;
+    } else {
+      if (!["+", "-", "*", "/"].includes(t)) throw Error("Invalid expression");
+      while (ops.length && priority(ops[ops.length - 1]) >= priority(t)) apply();
+      ops.push(t);
+      expecting = true;
+    }
+  }
+
+  if (expecting) throw Error("Incomplete expression");
+  while (ops.length) apply();
+  if (values.length !== 1) throw Error("Invalid expression");
+  return Number(values[0].toPrecision(12));
+}
+
+function Calculator() {
+  const [expression, setExpression] = useState("");
+  const [display, setDisplay] = useState("0");
+  const [error, setError] = useState("");
+  const [finished, setFinished] = useState(false);
+
+  function clear() {
+    setExpression("");
+    setDisplay("0");
+    setError("");
+    setFinished(false);
+  }
+
+  function press(key) {
+    if (key === "AC") return clear();
+
+    if (key === "DEL") {
+      setExpression(v => v.slice(0, -1));
+      setDisplay(v => v.length > 1 ? v.slice(0, -1) : "0");
+      setError("");
+      setFinished(false);
+      return;
+    }
+
+    if (key === "=") {
+      if (!expression) return;
+      try {
+        const result = String(calculate(expression));
+        setDisplay(result);
+        setExpression(result);
+        setError("");
+      } catch (e) {
+        setDisplay("Error");
+        setError(e.message);
+      }
+      setFinished(true);
+      return;
+    }
+
+    if (["+", "-", "*", "/"].includes(key)) {
+      setError("");
+      let current = finished ? display : expression;
+      if (current === "Error") current = "";
+      if (!current && key !== "-") return;
+      if (/[+\-*/]$/.test(current))
+        current = current.slice(0, -1);
+      const next = current + key;
+      setExpression(next);
+      setDisplay(next);
+      setFinished(false);
+      return;
+    }
+
+    setError("");
+    let current = finished ? "" : expression;
+
+    if (key === ".") {
+      const last = current.split(/[+\-*/]/).pop();
+      if (last.includes(".")) return;
+      if (!last) current += "0";
+    }
+
+    if (current.length >= 40) return;
+
+    const next = current + key;
+    setExpression(next);
+    setDisplay(next);
+    setFinished(false);
+  }
+
+  useEffect(() => {
+    function keyboard(e) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (/^[0-9.]$/.test(e.key)) press(e.key);
+      else if (["+", "-", "*", "/"].includes(e.key)) press(e.key);
+      else if (e.key === "Enter" || e.key === "=") press("=");
+      else if (e.key === "Backspace") press("DEL");
+      else if (e.key === "Escape") press("AC");
+    }
+    window.addEventListener("keydown", keyboard);
+    return () => window.removeEventListener("keydown", keyboard);
+  });
+
+  const buttons = [
+    ["AC", "utility"], ["DEL", "utility"], ["÷", "operator", "/"], ["×", "operator", "*"],
+    ["7", "number"], ["8", "number"], ["9", "number"], ["−", "operator", "-"],
+    ["4", "number"], ["5", "number"], ["6", "number"], ["+", "operator", "+"],
+    ["1", "number"], ["2", "number"], ["3", "number"], ["0", "number", "0", true],
+    [".", "number"], ["=", "equals"]
+  ];
+
+  return (
+    <section id="calculator" className="w-full max-w-md rounded-3xl bg-[#064e3b] p-5 text-white shadow-2xl sm:p-6">
+      <div className="mb-5 flex items-center justify-between">
+        <h2 className="text-xl font-bold">▦ Calculator</h2>
+        <button onClick={clear} className="text-emerald-300">AC</button>
+      </div>
+
+      <div className="mb-5 flex min-h-32 flex-col justify-end overflow-hidden rounded-2xl border border-emerald-400/30 bg-[#032e23] p-5 text-right">
+        <div className="mb-3 overflow-x-auto whitespace-nowrap text-sm text-emerald-200">
+          {expression.replaceAll("*", "×").replaceAll("/", "÷").replaceAll("-", "−") || "Enter calculation"}
+        </div>
+        <div aria-live="polite" className="break-all text-4xl font-light sm:text-5xl">
+          {display}
+        </div>
+        <p className="mt-2 min-h-4 text-xs text-rose-300">{error}</p>
+      </div>
+
+      <div className="grid grid-cols-4 gap-2.5">
+        {buttons.map(([label, style, value, wide], i) => (
+          <button
+            key={i}
+            onClick={() => press(value || label)}
+            className={`min-h-14 rounded-xl text-lg font-semibold ${style} ${wide ? "col-span-2" : ""}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <div className="mt-4 flex justify-between text-xs text-emerald-200">
+        <span>Keyboard supported</span>
+        <button onClick={clear}>↻ Reset</button>
+      </div>
+    </section>
+  );
+}
+
+const guide = [
+  ["01", "Enter Numbers", "Click the number buttons from 0 to 9. Use the decimal point for values such as 3.14."],
+  ["02", "Choose an Operation", "Select addition (+), subtraction (−), multiplication (×), or division (÷)."],
+  ["03", "Get the Result", "Press equals (=) to calculate and display your answer."],
+  ["04", "Clear or Delete", "AC clears everything. DEL removes the last character."],
+  ["05", "Keyboard Support", "Use number keys and operators. Enter calculates, Backspace deletes, and Escape resets."],
+  ["06", "Supported Operations", "Addition, subtraction, multiplication, division, decimal numbers, and division-by-zero error handling."]
+];
+
+function App() {
+  return (
+    <div>
+      <header className="sticky top-0 z-10 bg-[#043c2d] text-white">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-5 py-4">
+          <a href="#home" className="text-xl font-extrabold">
+            CvSU <span className="text-emerald-400">Calc</span>
+            <span className="block text-xs font-normal text-emerald-100">DCIT 26 · Laboratory 1</span>
+          </a>
+          <nav className="hidden gap-6 text-sm sm:flex">
+            <a href="#home" className="hover:text-emerald-300">Home</a>
+            <a href="#guide" className="hover:text-emerald-300">User Guide</a>
+            <a href="#about" className="hover:text-emerald-300">About CvSU</a>
+          </nav>
+          <a href="#calculator" className="rounded-lg bg-emerald-600 px-3 py-2 text-sm sm:hidden">Calculate</a>
+        </div>
+      </header>
+
+      <main>
+        <section id="home" className="bg-gradient-to-br from-emerald-50 via-white to-green-100">
+          <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 py-12 sm:py-16 lg:grid-cols-2 lg:gap-16 lg:py-20">
+            <div>
+              <span className="rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-800">
+                Simple · Fast · Reliable
+              </span>
+              <h1 className="mt-7 text-4xl font-extrabold leading-tight text-emerald-950 sm:text-6xl">
+                Welcome to <span className="text-emerald-600">CvSU</span> Calculator
+              </h1>
+              <p className="mt-5 max-w-lg text-lg leading-8 text-slate-600">
+                A modern and responsive calculator built with React and Tailwind CSS for your everyday calculations.
+              </p>
+              <div className="mt-8 grid grid-cols-3 gap-3 text-sm">
+                <div><div className="mb-2 text-2xl text-emerald-700">±</div><b>Basic Operations</b><p className="mt-1 text-xs text-slate-500">+ − × ÷</p></div>
+                <div><div className="mb-2 text-2xl text-emerald-700">⌨</div><b>Keyboard Support</b><p className="mt-1 text-xs text-slate-500">Type and calculate</p></div>
+                <div><div className="mb-2 text-2xl text-emerald-700">▣</div><b>Responsive Design</b><p className="mt-1 text-xs text-slate-500">All devices</p></div>
+              </div>
+              <a href="#calculator" className="mt-8 inline-block rounded-full bg-emerald-700 px-6 py-3 font-bold text-white hover:bg-emerald-600">
+                Go to Calculator →
+              </a>
+            </div>
+            <div className="flex justify-center"><Calculator /></div>
+          </div>
+        </section>
+
+        <section id="guide" className="mx-auto max-w-7xl scroll-mt-20 px-5 py-14 sm:py-16">
+          <h2 className="text-3xl font-extrabold text-slate-900 sm:text-4xl">▤ User Guide</h2>
+          <p className="mt-3 mb-8 text-slate-600">Learn how to use the calculator and its features.</p>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {guide.map(([number, title, description]) => (
+              <article key={number} className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-6">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-800 font-bold text-white">{number}</span>
+                <h3 className="mt-4 text-lg font-bold text-emerald-950">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="about" className="scroll-mt-20 bg-gradient-to-br from-[#043c2d] to-[#08734b] px-5 py-14 text-white">
+          <div className="mx-auto max-w-7xl">
+            <h2 className="text-3xl font-extrabold">Cavite State University</h2>
+            <p className="mt-2 text-emerald-200">Excellence · Character · Service</p>
+            <div className="mt-8 grid gap-5 md:grid-cols-2">
+              <article className="rounded-2xl border border-emerald-300/50 bg-white/5 p-6">
+                <h3 className="mb-3 text-xl font-bold text-emerald-300">CvSU Vision</h3>
+                <p className="text-sm leading-7 text-emerald-50">
+                  The premier university in historic Cavite globally recognized for excellence in character development, academics, research, innovation and sustainable community engagement.
+                </p>
+              </article>
+              <article className="rounded-2xl border border-emerald-300/50 bg-white/5 p-6">
+                <h3 className="mb-3 text-xl font-bold text-emerald-300">CvSU Mission</h3>
+                <p className="text-sm leading-7 text-emerald-50">
+                  Cavite State University shall provide excellent, equitable, and relevant educational opportunities in the arts, sciences, and technology through quality instruction and responsive research and development activities. It shall produce professional, skilled, and morally upright individuals for global competitiveness.
+                </p>
+              </article>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="bg-[#032c22] px-5 py-7 text-emerald-100">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:justify-between">
+          <div>
+            <b className="text-white">CvSU Calc</b>
+            <p className="mt-1 text-xs">DCIT 26: Application Development and Emerging Technologies</p>
+            <p className="mt-1 text-xs">Laboratory 1 — First Semester, SY 2026–2027</p>
+          </div>
+          <p className="text-xs text-emerald-300">Built with React and Tailwind CSS</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Products - Uncle George</title>
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center" href="index.html">
+      <img src="images/logo.png" alt="Uncle George" style="height:40px;width:40px;" class="me-2">
+      <span class="fw-bold">Uncle George</span>
+    </a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#navOffcanvas">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end">
+      <ul class="navbar-nav me-3">
+        <li class="nav-item"><a class="nav-link" href="index.html"><i class="bi bi-house-door me-1"></i> Home</a></li>
+        <li class="nav-item"><a class="nav-link active" href="products.html"><i class="bi bi-grid me-1"></i> Products</a></li>
+        <li class="nav-item"><a class="nav-link" href="about.html"><i class="bi bi-people me-1"></i> About</a></li>
+        <li class="nav-item"><a class="nav-link" href="contact.html"><i class="bi bi-envelope me-1"></i> Contact</a></li>
+      </ul>
+      <a href="cart.html" class="btn btn-outline-light position-relative">
+        <i class="bi bi-cart3"></i><span id="navCartCount"></span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- Offcanvas Mobile Nav -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="navOffcanvas">
+  <div class="offcanvas-header">
+    <h5 class="text-white">Uncle George</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body">
+    <ul class="navbar-nav">
+      <li class="nav-item"><a class="nav-link" href="index.html"><i class="bi bi-house-door me-2"></i>Home</a></li>
+      <li class="nav-item"><a class="nav-link" href="products.html"><i class="bi bi-grid me-2"></i>Products</a></li>
+      <li class="nav-item"><a class="nav-link" href="about.html"><i class="bi bi-people me-2"></i>About</a></li>
+      <li class="nav-item"><a class="nav-link" href="contact.html"><i class="bi bi-envelope me-2"></i>Contact</a></li>
+      <li class="nav-item"><a class="nav-link" href="cart.html"><i class="bi bi-cart3 me-2"></i>Cart</a></li>
+    </ul>
+  </div>
+</div>
+
+<!-- Page Header -->
+<section class="page-header text-center" style="margin-top:56px;">
+  <div class="container"><h1><i class="bi bi-grid me-3"></i>Our Products</h1></div>
+</section>
+
+<!-- Products Grid -->
+<section style="padding:40px 0;">
+  <div class="container">
+    <!-- Category Filter Buttons -->
+    <div class="d-flex gap-2 mb-4 justify-content-center flex-wrap" id="categoryFilter">
+      <button class="btn btn-sm btn-brand" onclick="filterCategory('all')"><i class="bi bi-grid me-1"></i> All</button>
+      <button class="btn btn-sm btn-outline-secondary" onclick="filterCategory('Loaf Breads')"><i class="bi bi-bag me-1"></i> Loaf Breads</button>
+      <button class="btn btn-sm btn-outline-secondary" onclick="filterCategory('Bread Rolls')"><i class="bi bi-circle me-1"></i> Bread Rolls</button>
+      <button class="btn btn-sm btn-outline-secondary" onclick="filterCategory('Pies & Pastries')"><i class="bi bi-pie-chart me-1"></i> Pies &amp; Pastries</button>
+      <button class="btn btn-sm btn-outline-secondary" onclick="filterCategory('Cakes')"><i class="bi bi-cake me-1"></i> Cakes</button>
+    </div>
+    <!-- Product Grid -->
+    <div class="row g-3" id="productsGrid"></div>
+    <!-- Pagination -->
+    <nav class="mt-4"><ul class="pagination justify-content-center" id="pagination"></ul></nav>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer-dark text-white pt-5 pb-3">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="d-flex align-items-center mb-3">
+          <img src="images/logo.png" alt="Uncle George" style="height:40px;width:40px;" class="me-2">
+          <h5 class="fw-bold mb-0">Uncle George</h5>
+        </div>
+        <p class="small" style="color:#c4a882;">Freshly baked bread, delivered to your door.</p>
+      </div>
+      <div class="col-lg-2 col-md-4">
+        <h6 class="fw-bold mb-3">Links</h6>
+        <ul class="list-unstyled">
+          <li class="mb-2"><a href="index.html" style="color:#c4a882;text-decoration:none;"><i class="bi bi-house-door me-2"></i>Home</a></li>
+          <li class="mb-2"><a href="products.html" style="color:#c4a882;text-decoration:none;"><i class="bi bi-grid me-2"></i>Products</a></li>
+          <li class="mb-2"><a href="about.html" style="color:#c4a882;text-decoration:none;"><i class="bi bi-people me-2"></i>About</a></li>
+          <li class="mb-2"><a href="contact.html" style="color:#c4a882;text-decoration:none;"><i class="bi bi-envelope me-2"></i>Contact</a></li>
+        </ul>
+      </div>
+      <div class="col-lg-3 col-md-4">
+        <h6 class="fw-bold mb-3">Contact</h6>
+        <ul class="list-unstyled">
+          <li class="mb-2" style="color:#c4a882;"><i class="bi bi-geo-alt me-2"></i>Cavite, Philippines</li>
+          <li class="mb-2" style="color:#c4a882;"><i class="bi bi-telephone me-2"></i>+63 912 345 6789</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="border-secondary mt-3">
+    <div class="d-flex justify-content-center gap-3 my-3">
+      <a href="#" class="text-white fs-5"><i class="bi bi-facebook"></i></a>
+      <a href="#" class="text-white fs-5"><i class="bi bi-twitter-x"></i></a>
+      <a href="#" class="text-white fs-5"><i class="bi bi-instagram"></i></a>
+    </div>
+    <div class="text-center pt-2"><small style="color:#c4a882;">&copy; 2026 Uncle George Bread & Pastries.</small></div>
+  </div>
+</footer>
+
+<!-- Toast -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999">
+  <div id="appToast" class="toast align-items-center text-bg-success border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body fw-semibold" id="appToastBody"></div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<script src="js/bootstrap.bundle.min.js"></script>
+<script src="js/script.js"></script>
+</body>
+</html>
